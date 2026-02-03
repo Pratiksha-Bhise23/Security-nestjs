@@ -1,5 +1,7 @@
 service: otp-login-nestjs
 
+frameworkVersion: '3'
+
 provider:
   name: aws
   runtime: nodejs18.x
@@ -14,26 +16,30 @@ provider:
 
 functions:
   api:
-    handler: dist/lambda.handler
+    handler: src/lambda.handler
     events:
       - httpApi: '*'
 
 plugins:
+  - serverless-esbuild
   - serverless-offline
 
-package:
-  individually: false
-  excludeDevDependencies: true
-
-build:
+custom:
   esbuild:
     bundle: true
-    format: cjs
-    platform: node
+    minify: false
+    sourcemap: true
     target: node18
+    platform: node
+    format: cjs
     external:
+      - aws-sdk
       - class-transformer
       - class-validator
       - '@nestjs/microservices'
       - '@nestjs/websockets/socket-module'
       - '@nestjs/microservices/microservices-module'
+
+package:
+  individually: false
+  excludeDevDependencies: true

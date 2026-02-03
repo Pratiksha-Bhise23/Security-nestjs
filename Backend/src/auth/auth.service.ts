@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { pool } from '../config/database.config';
 import { generateOtp } from '../utils/otp-generator';
 import { sendEmail } from '../utils/send-email';
+import { Role } from './enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -77,9 +78,10 @@ export class AuthService {
       [email]
     );
 
-    // Generate JWT token
+    // Generate JWT token with role
+    const userRole = user.role || Role.User;
     const token = this.jwtService.sign(
-      { email, id: user.id },
+      { email, id: user.id, role: userRole },
       { expiresIn: '7d' }
     );
 
@@ -88,9 +90,11 @@ export class AuthService {
       message: 'OTP verified successfully',
       token,
       email,
+      role: userRole,
       user: {
         id: user.id,
         email: user.email,
+        role: userRole,
       },
     };
   }
@@ -100,7 +104,7 @@ export class AuthService {
       throw new UnauthorizedException('Email not provided');
     }
 
-    const result = await pool.query('SELECT id, email, is_verified, created_at FROM users WHERE email = $1', [email]);
+    const result = await pool.query('SELECT id, email, role, is_verified, created_at FROM users WHERE email = $1', [email]);
 
     if (!result.rows.length) {
       throw new UnauthorizedException('User not found');
@@ -110,14 +114,5 @@ export class AuthService {
       success: true,
       user: result.rows[0],
     };
-  }
-
-  async validateToken(token: string) {
-    try {
-      const payload = this.jwtService.verify(token);
-      return payload;
-    } catch (error) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
   }
 }

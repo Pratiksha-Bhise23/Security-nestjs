@@ -45,10 +45,18 @@ export default function Otp() {
         // Store JWT token
         localStorage.setItem("authToken", res.token);
         localStorage.setItem("user", JSON.stringify(res.user));
+        
+        // Store user role for navigation
+        const userRole = res.role || res.user.role;
+        localStorage.setItem("userRole", userRole);
 
-        // Redirect to profile
+        // Redirect based on role
         setTimeout(() => {
-          window.location.href = "/profile";
+          if (userRole === "admin") {
+            window.location.href = "/dashboard";
+          } else {
+            window.location.href = "/profile";
+          }
         }, 1000);
       } else {
         setError(res.message || "Verification failed");

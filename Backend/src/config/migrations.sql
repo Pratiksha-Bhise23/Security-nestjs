@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   otp VARCHAR(6),
   otp_expiry TIMESTAMP,
   is_verified BOOLEAN DEFAULT FALSE,
+  role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -18,6 +19,9 @@ ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 ALTER TABLE users 
 ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;
+
+ALTER TABLE users 
+ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'admin'));
 
 -- Create index on email for faster lookups
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);

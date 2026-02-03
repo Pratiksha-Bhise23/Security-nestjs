@@ -1,0 +1,39 @@
+service: otp-login-nestjs
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-south-1
+  timeout: 30
+  environment:
+    DB_HOST: ${env:DB_HOST}
+    DB_PORT: ${env:DB_PORT}
+    DB_USERNAME: ${env:DB_USERNAME}
+    DB_PASSWORD: ${env:DB_PASSWORD}
+    DB_NAME: ${env:DB_NAME}
+
+functions:
+  api:
+    handler: dist/lambda.handler
+    events:
+      - httpApi: '*'
+
+plugins:
+  - serverless-offline
+
+package:
+  individually: false
+  excludeDevDependencies: true
+
+build:
+  esbuild:
+    bundle: true
+    format: cjs
+    platform: node
+    target: node18
+    external:
+      - class-transformer
+      - class-validator
+      - '@nestjs/microservices'
+      - '@nestjs/websockets/socket-module'
+      - '@nestjs/microservices/microservices-module'

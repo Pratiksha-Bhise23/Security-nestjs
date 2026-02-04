@@ -28,7 +28,7 @@ export class AuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const token = this.extractTokenFromRequest(request);
 
     if (!token) {
       throw new UnauthorizedException('No token provided');
@@ -45,8 +45,23 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+  private extractTokenFromRequest(request: Request): string | undefined {
+    // First try to get token from Authorization header (for backward compatibility)
+    const authHeader = request.headers.authorization?.split(' ') ?? [];
+    if (authHeader[0] === 'Bearer' && authHeader[1]) {
+      console.log('[AuthGuard] Token found in Authorization header');
+      return authHeader[1];
+    }
+
+    // Then try to get token from cookies (cookie-based auth)
+    const token = request.cookies?.authToken;
+    if (token) {
+      console.log('[AuthGuard] Token found in cookies');
+      return token;
+    }
+
+    console.log('[AuthGuard] No token found. Cookies:', request.cookies);
+    console.log('[AuthGuard] Authorization header:', request.headers.authorization);
+    return undefined;
   }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getDashboardStats } from "../api/auth";
+import { getDashboardStats, logout } from "../api/auth";
 
 interface DashboardStats {
   totalUsers: number;
@@ -22,20 +22,19 @@ export default function Dashboard() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
     const userRole = localStorage.getItem("userRole");
 
-    if (!token || userRole !== "admin") {
+    if (userRole !== "admin") {
       navigate("/");
       return;
     }
 
-    fetchDashboardStats(token);
+    fetchDashboardStats();
   }, [navigate]);
 
-  const fetchDashboardStats = async (token: string) => {
+  const fetchDashboardStats = async () => {
     try {
-      const data = await getDashboardStats(token);
+      const data = await getDashboardStats();
       setStats(data.stats);
       setError("");
     } catch (err) {
@@ -46,9 +45,17 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      // Call backend logout to clear cookies
+      await logout();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      // Clear localStorage
+      localStorage.clear();
+      navigate("/");
+    }
   };
 
   if (loading) {
@@ -203,4 +210,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
+}                

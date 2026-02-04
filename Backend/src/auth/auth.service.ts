@@ -4,10 +4,14 @@ import { pool } from '../config/database.config';
 import { generateOtp } from '../utils/otp-generator';
 import { sendEmail } from '../utils/send-email';
 import { Role } from './enums/role.enum';
+import { CsrfService } from '../csrf/csrf.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private csrfService: CsrfService,
+  ) {}
 
   async sendOtp(email: string) {
     if (!email || !email.includes('@')) {
@@ -85,19 +89,33 @@ export class AuthService {
       { expiresIn: '7d' }
     );
 
+    // Generate CSRF token for authenticated user
+    const csrfToken = this.csrfService.generateToken();
+    this.csrfService.storeToken(user.id, csrfToken);
+
     return {
       success: true,
       message: 'OTP verified successfully',
       token,
-      email,
-      role: userRole,
+      csrfToken,
       user: {
         id: user.id,
         email: user.email,
         role: userRole,
       },
+      role: userRole,
     };
   }
+
+  //     email,
+  //     role: userRole,
+  //     user: {
+  //       id: user.id,
+  //       email: user.email,
+  //       role: userRole,
+  //     },
+  //   };
+  // }
 
   async getProfile(email: string) {
     if (!email) {
@@ -114,5 +132,5 @@ export class AuthService {
       success: true,
       user: result.rows[0],
     };
-  }
-}
+  }}
+

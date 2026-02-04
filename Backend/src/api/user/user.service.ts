@@ -67,4 +67,42 @@ export class UserService {
       user: result.rows[0],
     };
   }
+
+  async updateEmailProfile(email: string, newEmail: string) {
+    if (!email) {
+      throw new UnauthorizedException('Email not provided');
+    }
+
+    if (!newEmail) {
+      return { success: false, message: 'New email is required' };
+    }
+
+    // Check if new email already exists
+    const existingUser = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
+      [newEmail],
+    );
+
+    if (existingUser.rows.length > 0) {
+      return { success: false, message: 'Email already in use' };
+    }
+
+    const result = await pool.query(
+      `UPDATE users 
+       SET email = $1, updated_at = NOW()
+       WHERE email = $2
+       RETURNING id, email, role, is_verified, created_at, updated_at`,
+      [newEmail, email],
+    );
+
+    if (!result.rows.length) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return {
+      success: true,
+      message: 'Email updated successfully',
+      user: result.rows[0],
+    };
+  }
 }

@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { CsrfModule } from '../csrf/csrf.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { RolesGuard } from './guards/roles.guard';
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       signOptions: { expiresIn: '7d' },
     }),
+    CsrfModule,
   ],
   controllers: [AuthController],
   providers: [

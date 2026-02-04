@@ -11,7 +11,7 @@ try {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT) || 5432,
     user: process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD || 'root',
+    password: process.env.DB_PASSWORD || 'Admin',
     database: process.env.DB_NAME || 'otp_login_db',
   });
 

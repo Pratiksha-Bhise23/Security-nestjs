@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../api/auth";
+import { updateProfileEmail } from "../api/auth";
 
 interface User {
   id: string;
@@ -12,13 +14,15 @@ export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("authToken");
     const userRole = localStorage.getItem("userRole");
 
-    if (!storedUser || !token) {
+    if (!storedUser) {
       navigate("/");
       return;
     }
@@ -41,9 +45,59 @@ export default function Profile() {
     }
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      // Call backend logout to clear cookies
+      await logout();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      // Clear localStorage
+      localStorage.clear();
+      navigate("/");
+    }
+  };
+
+  const handleUpdateEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newEmail.trim()) {
+      setError("Please enter a new email");
+      return;
+    }
+
+    if (newEmail === user?.email) {
+      setError("New email must be different from current email");
+      return;
+    }
+
+    try {
+      setUpdating(true);
+      setError("");
+      const response = await updateProfileEmail(newEmail);
+
+      if (response.success) {
+        // Update local user data with new email
+        setUser((prev) =>
+          prev ? { ...prev, email: response.user.email } : null
+        );
+
+        // Update stored user data
+        if (response.user) {
+          localStorage.setItem("user", JSON.stringify(response.user));
+        }
+
+        setIsEditing(false);
+        setNewEmail("");
+      } else {
+        setError(response.message || "Failed to update email");
+      }
+    } catch (err: any) {
+      setError(err.message || "Error updating email");
+      console.error("Update email error:", err);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   /* ================= Loading ================= */
@@ -123,6 +177,50 @@ export default function Profile() {
                 {user.role}
               </span>
             </div>
+          )}
+
+          {/* Edit Email Form */}
+          {isEditing ? (
+            <div className="bg-blue-50 rounded-xl p-4 space-y-3 border border-blue-200">
+              <h3 className="text-sm font-semibold text-gray-700">Update Email</h3>
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <form onSubmit={handleUpdateEmail} className="space-y-3">
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="Enter new email"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={updating}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-2 rounded-lg font-semibold text-sm transition"
+                  >
+                    {updating ? "Updating..." : "Update"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setNewEmail("");
+                      setError("");
+                    }}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 rounded-lg font-semibold text-sm transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold transition"
+            >
+              Edit Profile
+            </button>
           )}
         </div>
       </div>

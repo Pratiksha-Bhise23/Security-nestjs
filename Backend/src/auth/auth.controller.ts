@@ -6,7 +6,9 @@ import {
   HttpStatus,
   Get,
   Req,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
@@ -28,15 +30,65 @@ export class AuthController {
   }
 
   /**
-   * Verify OTP and return JWT token
+   * Verify OTP and set cookie-based authentication
    * Public endpoint - no authentication required
-   * Returns token and user role for frontend routing
+   * Sets HTTP-only cookie with JWT token and CSRF token cookie
    */
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('verify-otp')
-  async verifyOtp(@Body() dto: VerifyOtpDto) {
-    return await this.authService.verifyOtp(dto.email, dto.otp);
+  async verifyOtp(@Body() dto: VerifyOtpDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.verifyOtp(dto.email, dto.otp);
+    
+    console.log('[Auth] Setting cookies for:', dto.email);
+    
+    // Determine cookie settings based on environment
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Set JWT token as HTTP-only cookie (secure, cannot be accessed by JS)
+    res.cookie('authToken', result.token, {
+      httpOnly: true,
+      secure: isProduction, // HTTPS only in production
+      sameSite: 'lax', // Works with HTTP on localhost, 'strict' for production
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
+    });
+
+    // Set CSRF token as a regular cookie (frontend can read it)
+    res.cookie('csrfToken', result.csrfToken, {
+      httpOnly: false, // Accessible to JavaScript
+      secure: isProduction,
+      sameSite: 'lax', // Works with both localhost and cross-origin with credentials
+      maxAge: 10 * 60 * 1000, // 10 minutes
+      path: '/',
+    });
+
+    console.log('[Auth] Cookies set. Auth Token length:', result.token.length, 'CSRF Token:', result.csrfToken.substring(0, 10) + '...');
+
+    return {
+      success: result.success,
+      message: result.message,
+      user: result.user,
+      role: result.role,
+      csrfToken: result.csrfToken,
+    };
+  }
+
+  /**
+   * Logout endpoint to clear authentication cookies
+   * Clears both authToken and csrfToken cookies
+   */
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Res({ passthrough: true }) res: Response) {
+    // Clear authentication cookies
+    res.clearCookie('authToken', { path: '/' });
+    res.clearCookie('csrfToken', { path: '/' });
+
+    return {
+      success: true,
+      message: 'Logged out successfully',
+    };
   }
 
   // @Get('profile')

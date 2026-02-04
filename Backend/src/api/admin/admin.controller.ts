@@ -15,6 +15,7 @@ import { AdminService } from './admin.service';
 import { AuthGuard } from '../../auth/auth.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { RolesGuard } from '../../auth/guards/roles.guard';
+import { CsrfGuard } from '../../csrf/csrf.guard';
 import { Role } from '../../auth/enums/role.enum';
 
 @Controller('admin')
@@ -51,24 +52,50 @@ export class AdminController {
 
   /**
    * Update user role
-   * Admin only
+   * Admin only - requires CSRF token
    */
   @Put('users/:id/role')
+  @UseGuards(CsrfGuard)
   @HttpCode(HttpStatus.OK)
   async updateUserRole(
     @Param('id') userId: string,
     @Body() body: { role: 'user' | 'admin' },
+    @Request() req: any,
   ) {
-    return await this.adminService.updateUserRole(parseInt(userId), body.role);
+    const response = await this.adminService.updateUserRole(parseInt(userId), body.role);
+    
+    // Include new CSRF token in response if available
+    if (req.csrfToken) {
+      return {
+        ...response,
+        csrfToken: req.csrfToken,
+      };
+    }
+    
+    return response;
   }
 
   /**
    * Delete user
-   * Admin only
+   * Admin only - requires CSRF token
    */
   @Delete('users/:id')
+  @UseGuards(CsrfGuard)
   @HttpCode(HttpStatus.OK)
-  async deleteUser(@Param('id') userId: string) {
-    return await this.adminService.deleteUser(parseInt(userId));
+  async deleteUser(
+    @Param('id') userId: string,
+    @Request() req: any,
+  ) {
+    const response = await this.adminService.deleteUser(parseInt(userId));
+    
+    // Include new CSRF token in response if available
+    if (req.csrfToken) {
+      return {
+        ...response,
+        csrfToken: req.csrfToken,
+      };
+    }
+    
+    return response;
   }
 }

@@ -43,10 +43,12 @@ export default function Otp() {
       setLoading(true);
       const res = await verifyOtp(email, otp);
 
-      if (res.success && res.token) {
-        // Store JWT token
-        localStorage.setItem("authToken", res.token);
+      if (res.success) {
+        // Store user data (but NOT token - it's in HTTP-only cookie)
         localStorage.setItem("user", JSON.stringify(res.user));
+        
+        // CSRF token is now stored as a cookie by backend at port 3000
+        // No need to store in localStorage anymore
         
         // Store user role for navigation
         const userRole = res.role || res.user.role;
@@ -69,6 +71,10 @@ export default function Otp() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBackToLogin = () => {
+    navigate("/");
   };
 
   return (
@@ -111,7 +117,7 @@ export default function Otp() {
         </button>
 
         <button
-          onClick={() => navigate("/")}
+          onClick={handleBackToLogin}
           className="mt-4 w-full text-blue-500 hover:text-blue-700 underline"
         >
           Back to Login

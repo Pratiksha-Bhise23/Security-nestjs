@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './api/user/user.module';
 import { AdminModule } from './api/admin/admin.module';
 import { SecurityTestModule } from './api/security-test/security-test.module';
+import { CsrfModule } from './csrf/csrf.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { SecurityTestModule } from './api/security-test/security-test.module';
     UserModule,
     AdminModule,
     SecurityTestModule,
+    CsrfModule,
   ],
 })
 export class AppModule {}

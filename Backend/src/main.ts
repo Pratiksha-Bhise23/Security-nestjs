@@ -1,17 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import helmet from 'helmet';
+// import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
 //  Register helmet (EXPRESS VERSION)
-  app.use(
-    helmet({
-      contentSecurityPolicy: false, // disable CSP for local development OR when using inline scripts
-    })
-  );
+  // app.use(
+  //   helmet({
+  //     contentSecurityPolicy: {
+  //       directives: {
+  //         defaultSrc: ["'self'"],
+  //       },
+  //     },
+  //   })
+  // );
   
   // Enable CORS for frontend development
   app.enableCors({

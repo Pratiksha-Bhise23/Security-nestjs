@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { sendOtp } from "../api/auth";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -29,9 +31,9 @@ export default function Login() {
         setSuccess(true);
         localStorage.setItem("email", email);
         
-        // Redirect to OTP page after 1.5 seconds
+        // Navigate to OTP page after 1.5 seconds (no page reload!)
         setTimeout(() => {
-          window.location.href = "/otp";
+          navigate("/otp");
         }, 1500);
       } else {
         setError(res.message || "Failed to send OTP");

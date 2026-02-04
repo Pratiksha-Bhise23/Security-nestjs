@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getDashboardStats } from "../api/auth";
 
 interface DashboardStats {
@@ -15,6 +16,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,12 +26,12 @@ export default function Dashboard() {
     const userRole = localStorage.getItem("userRole");
 
     if (!token || userRole !== "admin") {
-      window.location.href = "/";
+      navigate("/");
       return;
     }
 
     fetchDashboardStats(token);
-  }, []);
+  }, [navigate]);
 
   const fetchDashboardStats = async (token: string) => {
     try {
@@ -46,7 +48,7 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/";
+    navigate("/");
   };
 
   if (loading) {

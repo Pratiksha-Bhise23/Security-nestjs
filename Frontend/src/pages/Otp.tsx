@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { verifyOtp } from "../api/auth";
 
 export default function Otp() {
+  const navigate = useNavigate();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -14,7 +16,7 @@ export default function Otp() {
           <h1 className="text-2xl font-bold text-red-600">Session Expired</h1>
           <p className="mt-2 text-gray-600">Please start from login again.</p>
           <button
-            onClick={() => (window.location.href = "/")}
+            onClick={() => navigate("/")}
             className="mt-4 bg-blue-500 text-white p-2 px-6 rounded hover:bg-blue-600"
           >
             Go to Login
@@ -50,12 +52,12 @@ export default function Otp() {
         const userRole = res.role || res.user.role;
         localStorage.setItem("userRole", userRole);
 
-        // Redirect based on role
+        // Navigate based on role (no page reload!)
         setTimeout(() => {
           if (userRole === "admin") {
-            window.location.href = "/dashboard";
+            navigate("/dashboard");
           } else {
-            window.location.href = "/profile";
+            navigate("/profile");
           }
         }, 1000);
       } else {
@@ -109,7 +111,7 @@ export default function Otp() {
         </button>
 
         <button
-          onClick={() => (window.location.href = "/")}
+          onClick={() => navigate("/")}
           className="mt-4 w-full text-blue-500 hover:text-blue-700 underline"
         >
           Back to Login

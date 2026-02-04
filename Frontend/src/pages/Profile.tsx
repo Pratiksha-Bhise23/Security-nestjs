@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface User {
   id: string;
@@ -7,6 +8,7 @@ interface User {
 }
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,12 +19,12 @@ export default function Profile() {
     const userRole = localStorage.getItem("userRole");
 
     if (!storedUser || !token) {
-      window.location.href = "/";
+      navigate("/");
       return;
     }
 
     if (userRole === "admin") {
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
       return;
     }
 
@@ -33,15 +35,15 @@ export default function Profile() {
       console.error("Error parsing user data:", error);
       setError("Failed to load user data");
       localStorage.clear();
-      window.location.href = "/";
+      navigate("/");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/";
+    navigate("/");
   };
 
   /* ================= Loading ================= */
